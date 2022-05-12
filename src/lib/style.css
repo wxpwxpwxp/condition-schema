@@ -1,0 +1,33 @@
+/** round  */
+.relation-node {
+  width: 100px;
+  height: 40px;
+  border: 1px solid #000000;
+  border-radius: 100%;
+}
+
+/** rect */
+.condition-node {
+  width: 100px;
+  height: 40px;
+  border: 1px solid #000000;
+}
+
+.line-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 10px solid ;
+  border-top-color: #000000;
+}
+
+.line {
+  box-sizing: border-box;
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 7px solid transparent;
+  border-left: 7px solid transparent;
+  border-top-color: #000000;
+  left: -6px;
+}

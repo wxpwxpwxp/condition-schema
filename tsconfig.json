@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "target": "ESNext",
+    "sourceMap": true,
+    "declaration": true,
+    "rootDir": ".",
+    "outDir": "./dist",
+    "removeComments": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": false,
+    "noImplicitOverride": true,
+    "importHelpers": true,
+    "baseUrl": "./",
+    "types": [
+      "node",
+      "jest",
+    ],
+    "lib": ["DOM"]
+  },
+  "ts-node": {
+    "files": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+  ],
+  "include": [
+    "src",
+    // "test",
+    // "example",
+    "babel.config.js",
+    "jest.config.cjs",
+    ".eslintrc.cjs",
+  ],
+  "compileOnSave": true
+}
