@@ -1,4 +1,4 @@
-import { StatementNode, StatementNodeType } from './node';
+import { StatementNode, StatementNodeButtonText, StatementNodeType } from './node';
 
 export function renderActionPanel(node: StatementNode) {
   switch (node.type) {
@@ -38,19 +38,47 @@ export function renderInputItem(text:string) {
 }
 
 export function renderText(text:string) {
-  const dom = document.createElement('span');
+  const dom = renderEmptyNode('span');
   dom.textContent = text;
   return dom;
 }
 
 export function renderInput() {
-  return document.createElement('input');
+  return renderEmptyNode('input');
 }
 
-export function renderEmptyNode() {
-  return document.createElement('div');
+export function renderEmptyNode(tagName: keyof HTMLElementTagNameMap = 'div') {
+  return document.createElement(tagName);
 }
 
 export function renderSelection() {
   return;
+}
+export function renderButton(text: string, callback: EventListener) {
+  const button = renderEmptyNode('button');
+  button.textContent = text;
+  button.addEventListener('click', callback);
+  return button;
+}
+
+export interface RenderWindowPanelOptions {
+  conditionAddCallback: EventListener;
+  relationAddCallback: EventListener;
+}
+
+export function renderWindowPanel(options: RenderWindowPanelOptions) {
+  const {
+    conditionAddCallback,
+    relationAddCallback
+  } = options;
+  return renderChildren(renderEmptyNode(), [
+    renderButton(StatementNodeButtonText[StatementNodeType.condition], conditionAddCallback),
+    renderButton(StatementNodeButtonText[StatementNodeType.relation], relationAddCallback)
+  ]);
+}
+
+export function renderWindowWorkspace() {
+  const node = renderEmptyNode();
+  node.classList.add('workspace');
+  return node;
 }

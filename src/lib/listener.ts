@@ -1,5 +1,6 @@
 import { NodeRelationShip, StatementNode } from './node';
 import { nextTick } from './utils';
+import { renderEmptyNode } from './view';
 
 let currentStatementNode: StatementNode | undefined;
 
@@ -59,8 +60,8 @@ export function addRenderLineListner(dom: HTMLElement) {
 
     const startX = e.clientX;
     const startY = e.clientY;
-    const lineDom = document.createElement('div');
-    const arrowDom = document.createElement('div');
+    const lineDom = renderEmptyNode();
+    const arrowDom = renderEmptyNode();
     lineDom.classList.add('line');
     arrowDom.classList.add('line-arrow');
     lineDom.appendChild(arrowDom);

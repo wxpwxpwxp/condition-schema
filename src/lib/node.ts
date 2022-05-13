@@ -13,6 +13,11 @@ export enum StatementNodeType {
   relation = 2
 }
 
+export const StatementNodeButtonText = {
+  [StatementNodeType.condition]: '新增条件语块',
+  [StatementNodeType.relation]: '新增关系语块'
+};
+
 export interface NodeRelationShipOptions {
   from: StatementNode;
   to: StatementNode;
