@@ -1,5 +1,13 @@
+.condition-window {
+  display: flex;
+  width: 100%;
+  min-height: 200px;
+  border: 1px solid #000000;
+}
+
 /** round  */
-.relation-node {
+.condition-window .relation-node {
+  position: absolute;
   width: 100px;
   height: 40px;
   border: 1px solid #000000;
@@ -7,21 +15,21 @@
 }
 
 /** rect */
-.condition-node {
+.condition-window .condition-node {
+  position: absolute;
   width: 100px;
   height: 40px;
   border: 1px solid #000000;
 }
 
-.line-arrow {
+.condition-window .line {
   position: absolute;
-  width: 0;
-  height: 0;
-  border: 10px solid ;
-  border-top-color: #000000;
+  width: 1px;
+  background-color: black;
+  transform-origin: top center;
 }
 
-.line {
+.condition-window .line-arrow {
   box-sizing: border-box;
   position: absolute;
   width: 0;
@@ -30,4 +38,13 @@
   border-left: 7px solid transparent;
   border-top-color: #000000;
   left: -6px;
+}
+
+.condition-window .condition-window__workspace {
+  position: relative;
+  flex: 1
+}
+
+.condition-window .condition-window__panel-container {
+  min-width: 100px;
 }

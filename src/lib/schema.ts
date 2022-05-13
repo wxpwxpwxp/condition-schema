@@ -18,5 +18,7 @@ export class ConditionSchema<T extends KeyValue> {
   constructor(options: ConditionSchemaOptions<T>) {
     this.context = options.context;
     this.dom = options.dom;
+    this.window = new ConditionSchemaWebWindow<T>();
+    this.dom.appendChild(this.window.dom);
   }
 }

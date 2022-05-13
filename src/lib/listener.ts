@@ -1,10 +1,13 @@
 import { NodeRelationShip, StatementNode } from './node';
+import { KeyValue } from './types';
 import { nextTick } from './utils';
 import { renderEmptyNode } from './view';
 
-let currentStatementNode: StatementNode | undefined;
+const MOVE_THRESHOLD = 5;
 
-export function setCurrentStatementNode(node:StatementNode) {
+let currentStatementNode: StatementNode<KeyValue> | undefined;
+
+export function setCurrentStatementNode<T extends KeyValue>(node: StatementNode<T>) {
   currentStatementNode = node;
 }
 
@@ -17,42 +20,87 @@ export function clearCurrentStatementNode() {
 }
 
 export function addStatementSelectListner(dom: HTMLElement ) {
-  dom.onmousedown = function() {
+  dom.addEventListener('mouseenter', function() {
     setCurrentStatementNode(dom.__condition__);
-  };
-  dom.onmouseup = function() {
-    setCurrentStatementNode(dom.__condition__);
-  };
+  });
 }
 
-export function clearRelationListener(ship: NodeRelationShip) {
-  ship.lineDom.onmousedown = function(e) {
+export interface AddElementMoveListenerOptions<T extends KeyValue> {
+  mousedownCallback?: (e: Event, node: StatementNode<T> | NodeRelationShip<T>) => Boolean;
+  mousemoveCallback?: (e: Event, node: StatementNode<T> | NodeRelationShip<T>) => void;
+  mouseupCallback?: (e: Event, node: StatementNode<T> | NodeRelationShip<T>) => void;
+}
+
+export function addElementMoveListener<T extends KeyValue>(node: StatementNode<T> | NodeRelationShip<T>, options?: AddElementMoveListenerOptions<T> ) {
+  const dom = node.moveDom;
+  const {
+    mousedownCallback,
+    mousemoveCallback,
+    mouseupCallback,
+  } = options;
+
+  const mousedown = function(e) {
     const startX = e.clientX;
     const startY = e.clientY;
     let hasMoved = false;
 
-    ship.lineDom.onmousemove = function(e) {
-      if (Math.abs(startX - e.clientX) > 10 && Math.abs(startY - e.clientY) > 10) {
+    if (mousedownCallback && !mousedownCallback(e, node)) {
+      return;
+    }
+
+    const mousemove = function(e) {
+      const diffX = e.clientX - startX;
+      const diffY = e.clientY - startY;
+
+      node.move(diffX, diffY);
+
+      mousemoveCallback?.(e, node);
+
+      if (Math.abs(diffX) > MOVE_THRESHOLD && Math.abs(diffY) > MOVE_THRESHOLD) {
         hasMoved = true;
       } else {
         return;
       }
     };
 
-    ship.lineDom.onmousedown = function() {
-      if (!hasMoved) return;
-      ship.lineDom.onmousemove = null;
-      ship.lineDom.onmousedown = null;
+    const mouseup = function(e) {
+      dom.removeEventListener('mousemove', mousemove);
+      dom.removeEventListener('mouseup', mouseup);
+
+      if (!hasMoved) {
+        node.move(0, 0);
+        return;
+      }
+
+      const diffX = e.clientX - startX;
+      const diffY = e.clientY - startY;
+
+      node.position.x += diffX;
+      node.position.y += diffY;
+
+      mouseupCallback?.(e, node);
+    };
+
+    dom.addEventListener('mousemove', mousemove);
+    dom.addEventListener('mouseup', mouseup);
+  };
+
+  dom.addEventListener('mousedown', mousedown);
+}
+
+export function clearRelationListener<T extends KeyValue>(ship: NodeRelationShip<T>) {
+  addElementMoveListener(ship, {
+    mouseupCallback() {
       const idx = ship.from.children.findIndex(i => i === ship);
       ship.from.children.splice(idx, 1);
       ship.to.parent = null;
-    };
-  };
+      ship.lineDom.remove();
+    }
+  });
 }
 
 export function addRenderLineListner(dom: HTMLElement) {
-  dom.onmousedown = async function(e) {
-    await nextTick();
+  const onmousedown = async function(e) {
     const startNode = getCurrentStatementNode();
     clearCurrentStatementNode();
 
@@ -69,13 +117,12 @@ export function addRenderLineListner(dom: HTMLElement) {
     lineDom.style.left = `${e.clientX - dom.getBoundingClientRect().left}px`;
     let hasMoved = false;
 
-    dom.onmousemove = function(e) {
+    const onmousemove = function(e) {
       const diffX = e.clientX - startX;
       const diffY = e.clientY - startY;
-      if (Math.abs(diffX) > 10 && Math.abs(diffY) > 10) {
+      if (Math.abs(diffX) > MOVE_THRESHOLD && Math.abs(diffY) > MOVE_THRESHOLD) {
         if (!hasMoved) dom.appendChild(lineDom);
         hasMoved = true;
-
       } else {
         return;
       }
@@ -128,16 +175,21 @@ export function addRenderLineListner(dom: HTMLElement) {
       lineDom.style.transform = `rotate(${( rad / Math.PI * 180) + y }deg)`;
     };
 
-    dom.onmouseup = async function() {
-      dom.onmousemove = null;
-      dom.onmouseup = null;
+    const onmouseup = async function() {
+      dom.removeEventListener('mousemove', onmousemove);
+      dom.removeEventListener('mouseup', onmouseup);
       if (!hasMoved) {
         return;
       }
+
+      lineDom.remove();
+
       await nextTick();
 
       const endpointNode = getCurrentStatementNode();
       clearCurrentStatementNode();
+
+      console.log('startNode endpointNode', startNode, endpointNode);
       if (endpointNode && startNode !== endpointNode) {
         const relation = new NodeRelationShip({
           from: startNode,
@@ -147,10 +199,14 @@ export function addRenderLineListner(dom: HTMLElement) {
         startNode.children.push(relation);
         endpointNode.parent = relation;
         clearRelationListener(relation);
+        dom.appendChild(lineDom);
         return;
-      } else {
-        dom.removeChild(lineDom);
       }
     };
+
+    dom.addEventListener('mousemove', onmousemove);
+    dom.addEventListener('mouseup', onmouseup);
   };
+
+  dom.addEventListener('mousedown', onmousedown);
 }

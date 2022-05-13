@@ -1,6 +1,7 @@
 import { StatementNode, StatementNodeButtonText, StatementNodeType } from './node';
+import { KeyValue } from './types';
 
-export function renderActionPanel(node: StatementNode) {
+export function renderActionPanel<T extends KeyValue>(node: StatementNode<T>) {
   switch (node.type) {
   case StatementNodeType.condition:
     return renderConditionPanel();
@@ -64,21 +65,24 @@ export function renderButton(text: string, callback: EventListener) {
 export interface RenderWindowPanelOptions {
   conditionAddCallback: EventListener;
   relationAddCallback: EventListener;
+  renderLineCallback: EventListener;
 }
 
 export function renderWindowPanel(options: RenderWindowPanelOptions) {
   const {
     conditionAddCallback,
-    relationAddCallback
+    relationAddCallback,
+    renderLineCallback
   } = options;
   return renderChildren(renderEmptyNode(), [
     renderButton(StatementNodeButtonText[StatementNodeType.condition], conditionAddCallback),
-    renderButton(StatementNodeButtonText[StatementNodeType.relation], relationAddCallback)
+    renderButton(StatementNodeButtonText[StatementNodeType.relation], relationAddCallback),
+    renderButton('使用箭头', renderLineCallback)
   ]);
 }
 
 export function renderWindowWorkspace() {
   const node = renderEmptyNode();
-  node.classList.add('workspace');
+  node.classList.add('condition-window__workspace');
   return node;
 }

@@ -1,4 +1,7 @@
+import { addElementMoveListener, addStatementSelectListner } from './listener';
+import { KeyValue } from './types';
 import { renderConditionPanel, renderEmptyNode, renderRelationPanel } from './view';
+import { ConditionSchemaWebWindow, ConditionSchemaWindow, WorkspaceMode } from './window';
 
 /**
  * @example
@@ -18,46 +21,70 @@ export const StatementNodeButtonText = {
   [StatementNodeType.relation]: '新增关系语块'
 };
 
-export interface NodeRelationShipOptions {
-  from: StatementNode;
-  to: StatementNode;
+export interface NodeRelationShipOptions<T extends KeyValue> {
+  from: StatementNode<T>;
+  to: StatementNode<T>;
   lineDom: HTMLElement;
 }
 
-export class NodeRelationShip {
-  from: StatementNode;
-  to: StatementNode;
+export class Position {
+  position: {x: number; y: number}
+  moveDom: HTMLElement;
+
+  constructor() {
+    this.position = {
+      x: 0,
+      y: 0
+    };
+  }
+
+  move(x: number, y: number) {
+    this.moveDom.style.transform = `translate(${this.position.x + x}px, ${this.position.y + y}px)`;
+  }
+}
+
+export class NodeRelationShip<T extends KeyValue> extends Position {
+  from: StatementNode<T>;
+  to: StatementNode<T>;
   lineDom: HTMLElement;
 
-  constructor(options: NodeRelationShipOptions) {
+  constructor(options: NodeRelationShipOptions<T>) {
+    super();
     this.from = options.from;
     this.to = options.to;
     this.lineDom = options.lineDom;
+    this.moveDom = this.lineDom;
   }
 }
 
-export class StatementNode {
+export class StatementNode<T extends KeyValue> extends Position {
   type: StatementNodeType;
   readonly dom: HTMLElement;
-  children?: NodeRelationShip[];
-  parent?: NodeRelationShip;
+  children: NodeRelationShip<T>[];
+  parent?: NodeRelationShip<T>;
+  window: ConditionSchemaWebWindow<T>;
 
   constructor(options) {
+    super();
     this.type = options.type;
     this.dom = options.dom;
     this.dom.__condition__ = this;
+    this.moveDom = this.dom;
+    this.window = options.window;
+    this.children = [];
   }
 }
 
-interface StatementTypeOptions {
+interface StatementTypeOptions<T extends KeyValue> {
   type: StatementNodeType;
+  window: ConditionSchemaWindow<T>;
 }
 
-export class StatementNodeWithPanel extends StatementNode {
+export class StatementNodeWithPanel<T extends KeyValue> extends StatementNode<T> {
   panelDom?: HTMLElement;
   getPanelDom: () => HTMLElement;
 
-  constructor(options: StatementTypeOptions) {
+  constructor(options: StatementTypeOptions<T>) {
     const dom = renderEmptyNode();
     if (options.type === StatementNodeType.condition) {
       dom.classList.add('condition-node');
@@ -67,7 +94,8 @@ export class StatementNodeWithPanel extends StatementNode {
 
     super({
       dom,
-      type: options.type
+      type: options.type,
+      window: options.window,
     });
 
     this.panelDom = undefined;
@@ -81,5 +109,13 @@ export class StatementNodeWithPanel extends StatementNode {
       }
       return this.panelDom;
     };
+
+    addStatementSelectListner(this.dom);
+
+    addElementMoveListener(this, {
+      mousedownCallback: () => {
+        return this.window.mode !== WorkspaceMode.line;
+      }
+    });
   }
 }
